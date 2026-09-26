@@ -1,11 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { Mic, MicOff, Volume2, Loader2, Headphones } from 'lucide-react';
+import type { Session } from '@google/genai';
+import { connectLiveCoach } from '../services/gemini';
+import { pcmToAudioBuffer } from '../utils/audio';
+import { useApiKey } from '../lib/apiKey';
 
 interface LiveVoiceCoachProps {
   AVAILABLE_LANGUAGES: string[];
 }
 
 export function LiveVoiceCoach({ AVAILABLE_LANGUAGES }: LiveVoiceCoachProps) {
+  const apiKey = useApiKey();
   const [isActive, setIsActive] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,7 +24,7 @@ export function LiveVoiceCoach({ AVAILABLE_LANGUAGES }: LiveVoiceCoachProps) {
 
   const [isSpeaking, setIsSpeaking] = useState(false);
   
-  const wsRef = useRef<WebSocket | null>(null);
+  const sessionRef = useRef<Session | null>(null);
   const inputAudioCtxRef = useRef<AudioContext | null>(null);
   const outputAudioCtxRef = useRef<AudioContext | null>(null);
   const processorRef = useRef<ScriptProcessorNode | null>(null);
@@ -45,33 +50,24 @@ export function LiveVoiceCoach({ AVAILABLE_LANGUAGES }: LiveVoiceCoachProps) {
   };
 
   const playAudioChunk = (base64Audio: string) => {
-    if (!outputAudioCtxRef.current) return;
+    const ctx = outputAudioCtxRef.current;
+    if (!ctx) return;
     setIsSpeaking(true);
-    
-    const binary = atob(base64Audio);
-    const bytes = new Uint8Array(binary.length);
-    for (let i = 0; i < binary.length; i++) {
-      bytes[i] = binary.charCodeAt(i);
-    }
-    const buffer = bytes.buffer;
 
-    outputAudioCtxRef.current.decodeAudioData(buffer, (audioBuffer) => {
-      if (!outputAudioCtxRef.current) return;
-      const source = outputAudioCtxRef.current.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(outputAudioCtxRef.current.destination);
-      
-      const currentTime = outputAudioCtxRef.current.currentTime;
-      const playTime = Math.max(currentTime, nextPlayTimeRef.current);
-      source.start(playTime);
-      nextPlayTimeRef.current = playTime + audioBuffer.duration;
-      
-      source.onended = () => {
-        if (outputAudioCtxRef.current && outputAudioCtxRef.current.currentTime >= nextPlayTimeRef.current) {
-          setIsSpeaking(false);
-        }
-      };
-    }).catch(err => console.error("Error decoding audio data", err));
+    const audioBuffer = pcmToAudioBuffer(ctx, base64Audio);
+    const source = ctx.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(ctx.destination);
+
+    const playTime = Math.max(ctx.currentTime, nextPlayTimeRef.current);
+    source.start(playTime);
+    nextPlayTimeRef.current = playTime + audioBuffer.duration;
+
+    source.onended = () => {
+      if (outputAudioCtxRef.current && outputAudioCtxRef.current.currentTime >= nextPlayTimeRef.current) {
+        setIsSpeaking(false);
+      }
+    };
   };
 
   const startSession = async () => {
@@ -87,22 +83,9 @@ export function LiveVoiceCoach({ AVAILABLE_LANGUAGES }: LiveVoiceCoachProps) {
       outputAudioCtxRef.current = outputCtx;
       nextPlayTimeRef.current = outputCtx.currentTime;
 
-      const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${wsProtocol}//${window.location.host}/live`;
-      const ws = new WebSocket(wsUrl);
-      wsRef.current = ws;
-
-      ws.onopen = () => {
-        setIsConnected(true);
-        ws.send(JSON.stringify({ type: 'start', language }));
-      };
-
-      ws.onmessage = (event) => {
-        const msg = JSON.parse(event.data);
-        if (msg.audio) {
-          playAudioChunk(msg.audio);
-        }
-        if (msg.interrupted) {
+      const session = await connectLiveCoach(language, {
+        onAudio: playAudioChunk,
+        onInterrupted: () => {
           if (outputAudioCtxRef.current) {
             outputAudioCtxRef.current.close();
             const newOutputCtx = new AudioContext({ sampleRate: 24000 });
@@ -110,22 +93,15 @@ export function LiveVoiceCoach({ AVAILABLE_LANGUAGES }: LiveVoiceCoachProps) {
             nextPlayTimeRef.current = newOutputCtx.currentTime;
           }
           setIsSpeaking(false);
-        }
-        if (msg.error) {
-          setError(msg.error);
+        },
+        onClose: () => stopSession(),
+        onError: (message) => {
+          setError(message);
           stopSession();
-        }
-      };
-
-      ws.onerror = (e) => {
-        console.error("WebSocket error", e);
-        setError("Connection error. Could not reach Live AI.");
-        stopSession();
-      };
-
-      ws.onclose = () => {
-        stopSession();
-      };
+        },
+      });
+      sessionRef.current = session;
+      setIsConnected(true);
 
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -138,10 +114,9 @@ export function LiveVoiceCoach({ AVAILABLE_LANGUAGES }: LiveVoiceCoachProps) {
       processor.connect(inputCtx.destination);
 
       processor.onaudioprocess = (e) => {
-        if (ws.readyState === WebSocket.OPEN) {
-          const base64 = pcmToBase64(e.inputBuffer.getChannelData(0));
-          ws.send(JSON.stringify({ audio: base64 }));
-        }
+        sessionRef.current?.sendRealtimeInput({
+          audio: { data: pcmToBase64(e.inputBuffer.getChannelData(0)), mimeType: 'audio/pcm;rate=16000' },
+        });
       };
     } catch (err: any) {
       console.error(err);
@@ -155,9 +130,10 @@ export function LiveVoiceCoach({ AVAILABLE_LANGUAGES }: LiveVoiceCoachProps) {
     setIsConnected(false);
     setIsSpeaking(false);
     
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+    if (sessionRef.current) {
+      const session = sessionRef.current;
+      sessionRef.current = null;
+      session.close();
     }
     if (processorRef.current) {
       processorRef.current.disconnect();
@@ -219,12 +195,14 @@ export function LiveVoiceCoach({ AVAILABLE_LANGUAGES }: LiveVoiceCoachProps) {
         </div>
         
         {error && <p className="text-xs text-rose-500 font-medium">{error}</p>}
+        {!apiKey && <p className="text-xs text-fuchsia-700">Add your Gemini key in Settings to talk with the coach.</p>}
 
         <div className="flex gap-2">
           {!isActive ? (
             <button
               onClick={startSession}
-              className="flex-1 py-3 bg-fuchsia-600 text-white rounded-xl font-medium hover:bg-fuchsia-700 transition-colors flex items-center justify-center gap-2 shadow-sm"
+              disabled={!apiKey}
+              className="flex-1 py-3 bg-fuchsia-600 text-white rounded-xl font-medium hover:bg-fuchsia-700 transition-colors flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Mic className="w-4 h-4" />
               Start Conversation
@@ -249,8 +227,8 @@ export function LiveVoiceCoach({ AVAILABLE_LANGUAGES }: LiveVoiceCoachProps) {
               </div>
             ) : (
               <div className="flex items-center gap-3 text-sm font-medium">
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full \${isSpeaking ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
-                  <Volume2 className={`w-4 h-4 \${isSpeaking ? 'animate-pulse' : ''}`} />
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full ${isSpeaking ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500'}`}>
+                  <Volume2 className={`w-4 h-4 ${isSpeaking ? 'animate-pulse' : ''}`} />
                   {isSpeaking ? 'Coach Speaking...' : 'Coach Listening...'}
                 </div>
               </div>

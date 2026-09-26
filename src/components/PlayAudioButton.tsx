@@ -3,6 +3,7 @@ import type { MouseEvent } from 'react';
 import { Volume2, Loader2 } from 'lucide-react';
 import { generateSpeech } from '../services/gemini';
 import { playBase64Audio, getAudioContext } from '../utils/audio';
+import { useApiKey } from '../lib/apiKey';
 
 interface PlayAudioButtonProps {
   text: string;
@@ -12,6 +13,7 @@ interface PlayAudioButtonProps {
 
 export default function PlayAudioButton({ text, lang, className = '' }: PlayAudioButtonProps) {
   const [isPlaying, setIsPlaying] = useState(false);
+  const apiKey = useApiKey();
 
   const handlePlay = async (e: MouseEvent) => {
     e.stopPropagation(); // Prevent triggering parent clicks
@@ -37,9 +39,9 @@ export default function PlayAudioButton({ text, lang, className = '' }: PlayAudi
   return (
     <button
       onClick={handlePlay}
-      disabled={isPlaying}
+      disabled={isPlaying || !apiKey}
       className={`p-1.5 rounded-full hover:bg-slate-100 transition-colors text-slate-500 hover:text-indigo-600 disabled:opacity-50 ${className}`}
-      title={`Listen in ${lang}`}
+      title={apiKey ? `Listen in ${lang}` : 'Add your Gemini key in Settings to listen'}
     >
       {isPlaying ? (
         <Loader2 className="w-4 h-4 animate-spin" />

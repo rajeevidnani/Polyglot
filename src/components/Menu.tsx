@@ -8,6 +8,7 @@ import { PWAInstallButton } from './PWAInstallButton';
 
 import { LiveVoiceCoach } from './LiveVoiceCoach';
 import { SettingsModal } from './SettingsModal';
+import { useApiKey } from '../lib/apiKey';
 
 export type PlayMode = 'quiz' | 'sentences';
 
@@ -28,6 +29,7 @@ export default function Menu({ onStart }: MenuProps) {
   const [isRecording, setIsRecording] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [pendingAction, setPendingAction] = useState<'basic' | 'custom' | null>(null);
+  const apiKey = useApiKey();
   
   useEffect(() => {
     localStorage.setItem('polyglot_user_languages', JSON.stringify(userLanguages));
@@ -104,6 +106,10 @@ export default function Menu({ onStart }: MenuProps) {
   };
 
   const handleGeneratePhraseClick = () => {
+    if (!apiKey) {
+      setShowSettings(true);
+      return;
+    }
     if (!phrase.trim()) {
       setError('Please enter a phrase');
       return;
@@ -218,7 +224,7 @@ export default function Menu({ onStart }: MenuProps) {
                 disabled={isGenerating}
                 className="w-full py-3.5 bg-teal-600 text-white rounded-xl font-medium hover:bg-teal-700 transition-colors disabled:opacity-70 flex items-center justify-center"
               >
-                {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Translate & Practice'}
+                {isGenerating ? <Loader2 className="w-5 h-5 animate-spin" /> : apiKey ? 'Translate & Practice' : 'Add your Gemini key to use this'}
               </button>
             </div>
             {error && <p className="text-sm text-rose-500 mt-2 relative z-10">{error}</p>}
