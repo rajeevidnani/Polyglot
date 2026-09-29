@@ -16,10 +16,29 @@ export async function testApiKey(key: string): Promise<void> {
   await client(key).models.get({ model: MODELS.text });
 }
 
-export function isBusy(err: any): boolean {
+export type AiErrorKind = 'busy' | 'limit' | 'other';
+
+// 503 = Google's model is overloaded. 429 = this key hit its own usage limit.
+export function classifyAiError(err: any): AiErrorKind {
   const status = err?.status ?? err?.code;
-  return status === 503 || status === 429 || /high demand|overloaded|UNAVAILABLE|RESOURCE_EXHAUSTED/i.test(String(err?.message));
+  const message = String(err?.message);
+  if (status === 429 || /RESOURCE_EXHAUSTED|quota|rate limit/i.test(message)) return 'limit';
+  if (status === 503 || /high demand|overloaded|UNAVAILABLE/i.test(message)) return 'busy';
+  return 'other';
 }
+
+export function aiErrorMessage(err: unknown, fallback: string): string {
+  switch (classifyAiError(err)) {
+    case 'busy':
+      return 'Gemini is very busy right now. Please try again in a minute.';
+    case 'limit':
+      return "Your Gemini key has hit its usage limit (free keys have per-minute and daily limits). Try again later, or check your limits in AI Studio.";
+    default:
+      return fallback;
+  }
+}
+
+const isBusy = (err: unknown) => classifyAiError(err) !== 'other';
 
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 

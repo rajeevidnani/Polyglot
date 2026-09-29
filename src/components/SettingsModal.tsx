@@ -3,7 +3,9 @@ import type { FormEvent } from 'react';
 import { motion } from 'motion/react';
 import { X, Plus, Trash2, KeyRound, Loader2, Check, ExternalLink } from 'lucide-react';
 import { useApiKey, setApiKey } from '../lib/apiKey';
-import { testApiKey } from '../services/gemini';
+import { testApiKey, aiErrorMessage } from '../services/gemini';
+import { SindhiScript, setSindhiScript, useSindhiScript } from '../lib/script';
+import { exportProgress, importProgress } from '../lib/progress';
 
 interface SettingsModalProps {
   userLanguages: string[];
@@ -24,9 +26,31 @@ function describeKeyError(err: any): string {
   return `That key didn't work. Google said: ${reason.slice(0, 300)}`;
 }
 
+function downloadBackup() {
+  const blob = new Blob([exportProgress()], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `polyglot-progress-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function SettingsModal({ userLanguages, setUserLanguages, onClose }: SettingsModalProps) {
   const [newLang, setNewLang] = useState('');
   const savedKey = useApiKey();
+  const sindhiScript = useSindhiScript();
+  const [backupMessage, setBackupMessage] = useState('');
+
+  const handleImport = async (file: File | undefined) => {
+    if (!file) return;
+    try {
+      importProgress(await file.text());
+      setBackupMessage('Progress restored.');
+    } catch (err: any) {
+      setBackupMessage(err?.message ?? "Couldn't read that file.");
+    }
+  };
   const [keyInput, setKeyInput] = useState(savedKey);
   const [keyStatus, setKeyStatus] = useState<'idle' | 'testing' | 'ok' | 'error'>('idle');
   const [keyError, setKeyError] = useState('');
@@ -44,7 +68,7 @@ export function SettingsModal({ userLanguages, setUserLanguages, onClose }: Sett
     } catch (err: any) {
       console.error(err);
       setKeyStatus('error');
-      setKeyError(describeKeyError(err));
+      setKeyError(aiErrorMessage(err, describeKeyError(err)));
     }
   };
 
@@ -165,6 +189,35 @@ export function SettingsModal({ userLanguages, setUserLanguages, onClose }: Sett
               ))
             )}
           </div>
+
+          <section className="mt-8">
+            <h4 className="font-semibold text-slate-800 mb-1">Sindhi script</h4>
+            <p className="text-sm text-slate-500 mb-3">Sindhi is written in Perso-Arabic script and in Devanagari. Pick what lessons show.</p>
+            <div className="grid grid-cols-3 gap-2">
+              {([['arabic', 'سنڌي Arabic'], ['devanagari', 'सिंधी Devanagari'], ['both', 'Both']] as [SindhiScript, string][]).map(([value, label]) => (
+                <button
+                  key={value}
+                  onClick={() => setSindhiScript(value)}
+                  className={`px-2 py-2 rounded-xl border text-sm font-medium transition-colors ${sindhiScript === value ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-700 border-slate-200 hover:border-indigo-300'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-8">
+            <h4 className="font-semibold text-slate-800 mb-1">Progress backup</h4>
+            <p className="text-sm text-slate-500 mb-3">Progress is saved on this device only. Download a backup to keep it safe or move it to another device.</p>
+            <div className="flex gap-2">
+              <button onClick={downloadBackup} className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200">Download backup</button>
+              <label className="flex-1 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-medium hover:bg-slate-200 text-center cursor-pointer">
+                Restore
+                <input type="file" accept="application/json" className="hidden" onChange={e => handleImport(e.target.files?.[0])} />
+              </label>
+            </div>
+            {backupMessage && <p className="text-sm text-slate-600 mt-2">{backupMessage}</p>}
+          </section>
         </div>
       </motion.div>
     </div>

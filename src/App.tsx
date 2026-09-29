@@ -1,43 +1,50 @@
-import { useState } from 'react';
-import Menu, { PlayMode } from './components/Menu';
-import Quiz from './components/Quiz';
+import { useEffect, useState } from 'react';
+import Menu from './components/Menu';
 import SentenceLearner from './components/SentenceLearner';
+import LearnHome from './components/LearnHome';
 import { WordData } from './types';
 
-export default function App() {
-  const [gameState, setGameState] = useState<'menu' | 'quiz' | 'sentences'>('menu');
-  const [words, setWords] = useState<WordData[]>([]);
+const DEFAULT_LANGUAGES = ['Dutch', 'Spanish', 'Hindi', 'Sindhi', 'Gujarati'];
 
-  const handleStart = (mode: PlayMode, selectedWords: WordData[]) => {
-    setWords(selectedWords);
-    setGameState(mode);
-  };
+function loadLanguages(): string[] {
+  try {
+    const saved = localStorage.getItem('polyglot_user_languages');
+    return saved ? JSON.parse(saved) : DEFAULT_LANGUAGES;
+  } catch {
+    return DEFAULT_LANGUAGES;
+  }
+}
+
+export default function App() {
+  const [screen, setScreen] = useState<'menu' | 'learn' | 'phrase'>('menu');
+  const [words, setWords] = useState<WordData[]>([]);
+  const [userLanguages, setUserLanguages] = useState<string[]>(loadLanguages);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('polyglot_user_languages', JSON.stringify(userLanguages));
+    } catch {
+      // ignore
+    }
+  }, [userLanguages]);
 
   const handleHome = () => {
-    setGameState('menu');
+    setScreen('menu');
     setWords([]);
   };
 
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-900">
-      {gameState === 'menu' && (
-        <Menu onStart={handleStart} />
-      )}
-      
-      {gameState === 'quiz' && (
-        <Quiz 
-          words={words} 
-          onHome={handleHome} 
+      {screen === 'menu' && (
+        <Menu
+          onStart={phraseWords => { setWords(phraseWords); setScreen('phrase'); }}
+          onLearn={() => setScreen('learn')}
+          userLanguages={userLanguages}
+          setUserLanguages={setUserLanguages}
         />
       )}
-
-      {gameState === 'sentences' && (
-        <SentenceLearner 
-          words={words} 
-          onHome={handleHome} 
-        />
-      )}
+      {screen === 'learn' && <LearnHome userLanguages={userLanguages} onHome={handleHome} />}
+      {screen === 'phrase' && <SentenceLearner words={words} onHome={handleHome} />}
     </div>
   );
 }
-

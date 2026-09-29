@@ -1,0 +1,177 @@
+import { CoreSentence } from './learnTypes';
+
+// Tim Ferriss, "How to Learn (But Not Master) Any Language in 1 Hour" (2007):
+// https://tim.blog/2007/11/07/how-to-learn-but-not-master-any-language-in-1-hour-plus-a-favor/
+// Sentences 1–9 are his; 10–13 are common additions from later versions of the method.
+// Translations drafted with AI help. Sindhi and Gujarati especially should be checked by a native speaker.
+export const coreSentences: CoreSentence[] = [
+  {
+    id: 'c1',
+    english: 'The apple is red.',
+    source: 'ferriss',
+    teaches: '"To be", adjectives, and whether nouns have gender',
+    tr: {
+      Dutch: { r: 'De appel is rood.', note: '"De" is "the" for most nouns; a smaller group of nouns use "het".' },
+      Spanish: { r: 'La manzana es roja.', note: 'Manzana is feminine, so it takes "la" and "roja" (not "rojo").' },
+      Hindi: { r: 'Seb laal hai.', n: 'सेब लाल है।', note: 'No word for "the". The verb "hai" (is) goes last: Hindi puts the verb at the end.' },
+      Sindhi: { r: 'Soofu gaaṛho aahe.', n: 'صوف ڳاڙهو آهي.', d: 'सूफ़ु ॻाढ़ो आहे.', note: '"Aahe" (is) comes last. "Gaaṛho" is the masculine form of red, matching soofu.' },
+      Gujarati: { r: 'Safarjan laal chhe.', n: 'સફરજન લાલ છે.', note: 'No word for "the". "Chhe" (is) goes at the end.' },
+    },
+  },
+  {
+    id: 'c2',
+    english: "It is John's apple.",
+    source: 'ferriss',
+    teaches: 'How to show possession',
+    tr: {
+      Dutch: { r: 'Het is Johns appel.', note: 'Like English, but no apostrophe: "Johns". "De appel van John" also works.' },
+      Spanish: { r: 'Es la manzana de John.', note: 'No \'s: Spanish says "the apple of John". "It" is dropped.' },
+      Hindi: { r: 'Yeh John ka seb hai.', n: 'यह जॉन का सेब है।', note: '"Ka" means "of". It becomes "ki" or "ke" to match the thing owned.' },
+      Sindhi: { r: 'Hee John jo soofu aahe.', n: 'هي جان جو صوف آهي.', d: 'ही जॉन जो सूफ़ु आहे.', note: '"Jo" means "of". It becomes "ji" for feminine nouns.' },
+      Gujarati: { r: 'Aa John nu safarjan chhe.', n: 'આ જોનનું સફરજન છે.', note: '"-nu" attaches to the name and changes (no / ni / nu) with the noun owned.' },
+    },
+  },
+  {
+    id: 'c3',
+    english: 'I give John the apple.',
+    source: 'ferriss',
+    teaches: 'Basic word order and the verb for "I"',
+    tr: {
+      Dutch: { r: 'Ik geef John de appel.', note: 'Same order as English. The verb is always the second idea in the sentence.' },
+      Spanish: { r: 'Le doy la manzana a John.', note: '"Doy" already means "I give". Spanish adds "le" (to him) even when John is named.' },
+      Hindi: { r: 'Main John ko seb deta hoon.', n: 'मैं जॉन को सेब देता हूँ।', note: '"Ko" marks who receives. "Deta" is for a male speaker; a woman says "deti".' },
+      Sindhi: { r: 'Maan John khe soofu ḍiyaan tho.', n: 'مان جان کي صوف ڏيان ٿو.', d: 'मां जॉन खे सूफ़ु ॾियां थो.', note: '"Khe" marks who receives. "Tho" is for a male speaker; a woman says "thi".' },
+      Gujarati: { r: 'Hu John ne safarjan aapu chhu.', n: 'હું જોનને સફરજન આપું છું.', note: '"Ne" marks who receives. The verb goes last.' },
+    },
+  },
+  {
+    id: 'c4',
+    english: 'We give him the apple.',
+    source: 'ferriss',
+    teaches: 'The verb for "we" and "him" as the receiver',
+    tr: {
+      Dutch: { r: 'Wij geven hem de appel.', note: 'The verb changes for "we": geef → geven.' },
+      Spanish: { r: 'Le damos la manzana.', note: '"Damos" = we give. "Le" = to him, placed before the verb.' },
+      Hindi: { r: 'Hum use seb dete hain.', n: 'हम उसे सेब देते हैं।', note: '"Use" = to him/her. The verb becomes "dete hain" for "we".' },
+      Sindhi: { r: 'Asaan hun khe soofu ḍiyoon tha.', n: 'اسان هن کي صوف ڏيون ٿا.', d: 'असां हुन खे सूफ़ु ॾियूं था.', note: '"Hun khe" = to him/her. "Tha" is the plural of "tho".' },
+      Gujarati: { r: 'Ame tene safarjan aapiye chhiye.', n: 'અમે તેને સફરજન આપીએ છીએ.', note: '"Tene" = to him/her. The ending changes for "we": aapiye chhiye.' },
+    },
+  },
+  {
+    id: 'c5',
+    english: 'He gives it to John.',
+    source: 'ferriss',
+    teaches: 'The verb for "he" and where "it" goes',
+    tr: {
+      Dutch: { r: 'Hij geeft het aan John.', note: '"Het" = it, "aan" = to. The verb gets a -t for "he".' },
+      Spanish: { r: 'Él se la da a John.', note: '"La" = it (the apple is feminine). "Le" becomes "se" next to "la".' },
+      Hindi: { r: 'Woh ise John ko deta hai.', n: 'वह इसे जॉन को देता है।', note: '"Ise" = it/this. "Deta hai" for "he".' },
+      Sindhi: { r: 'Hoo hee John khe ḍie tho.', n: 'هو هي جان کي ڏئي ٿو.', d: 'हू ही जॉन खे ॾिए थो.', note: '"Hoo" = he. "Ḍie tho" = gives (male subject).' },
+      Gujarati: { r: 'Te aa John ne aape chhe.', n: 'તે આ જોનને આપે છે.', note: '"Te" = he or she. "Aape chhe" = gives.' },
+    },
+  },
+  {
+    id: 'c6',
+    english: 'She gives it to him.',
+    source: 'ferriss',
+    teaches: 'Whether the verb changes for "she", and pronoun order',
+    tr: {
+      Dutch: { r: 'Zij geeft het aan hem.', note: 'Same verb as for "he". "Hem" = him.' },
+      Spanish: { r: 'Ella se la da.', note: 'Same verb as for "he". "Se la" already means "it to him".' },
+      Hindi: { r: 'Woh use yeh deti hai.', n: 'वह उसे यह देती है।', note: 'The verb changes because the giver is female: "deti", not "deta".' },
+      Sindhi: { r: 'Hoa hun khe hee ḍie thi.', n: 'هوءَ هن کي هي ڏئي ٿي.', d: 'हूअ हुन खे ही ॾिए थी.', note: 'The verb changes for a female giver: "thi", not "tho".' },
+      Gujarati: { r: 'Te tene aa aape chhe.', n: 'તે તેને આ આપે છે.', note: 'Same verb for he and she in the present tense.' },
+    },
+  },
+  {
+    id: 'c7',
+    english: "I don't give him the apple.",
+    source: 'ferriss',
+    teaches: 'How to say "not"',
+    tr: {
+      Dutch: { r: 'Ik geef hem de appel niet.', note: '"Niet" comes near the end, not before the verb.' },
+      Spanish: { r: 'No le doy la manzana.', note: '"No" goes before everything, including "le".' },
+      Hindi: { r: 'Main use seb nahin deta.', n: 'मैं उसे सेब नहीं देता।', note: '"Nahin" goes before the verb, and "hoon" is usually dropped.' },
+      Sindhi: { r: 'Maan hun khe soofu na ḍiyaan tho.', n: 'مان هن کي صوف نه ڏيان ٿو.', d: 'मां हुन खे सूफ़ु न ॾियां थो.', note: '"Na" goes right before the verb.' },
+      Gujarati: { r: 'Hu tene safarjan nathi aapto.', n: 'હું તેને સફરજન નથી આપતો.', note: '"Nathi" = not, and the verb changes form: aapto (male speaker).' },
+    },
+  },
+  {
+    id: 'c8',
+    english: 'I must give it to him.',
+    source: 'ferriss',
+    teaches: '"Must" + a second verb',
+    tr: {
+      Dutch: { r: 'Ik moet het aan hem geven.', note: 'The second verb jumps to the very end.' },
+      Spanish: { r: 'Tengo que dárselo.', note: '"Tengo que" = I have to. The pronouns can attach to the end: dár-se-lo.' },
+      Hindi: { r: 'Mujhe use yeh dena hai.', n: 'मुझे उसे यह देना है।', note: 'Literally "to me, giving is". "Mujhe … dena hai" = I have to give.' },
+      Sindhi: { r: 'Mookhe hun khe hee ḍiyaṇo aahe.', n: 'مون کي هن کي هي ڏيڻو آهي.', d: 'मूंखे हुन खे ही ॾियणो आहे.', note: '"Mookhe … ḍiyaṇo aahe" = I have to give, built like Hindi.' },
+      Gujarati: { r: 'Mare tene aa aapvu joie.', n: 'મારે તેને આ આપવું જોઈએ.', note: '"Mare … joie" = I must. The verb becomes "aapvu".' },
+    },
+  },
+  {
+    id: 'c9',
+    english: 'I want to give it to her.',
+    source: 'ferriss',
+    teaches: '"Want" + a second verb',
+    tr: {
+      Dutch: { r: 'Ik wil het aan haar geven.', note: 'Same pattern as "moet": the second verb goes last.' },
+      Spanish: { r: 'Quiero dárselo a ella.', note: '"Quiero" = I want, followed by the verb as-is.' },
+      Hindi: { r: 'Main use yeh dena chahta hoon.', n: 'मैं उसे यह देना चाहता हूँ।', note: '"Chahta" = want (a woman says "chahti").' },
+      Sindhi: { r: 'Maan hun khe hee ḍiyaṇu chaahiyaan tho.', n: 'مان هن کي هي ڏيڻ چاهيان ٿو.', d: 'मां हुन खे ही ॾियणु चाहियां थो.', note: '"Chaahiyaan tho" = I want (male speaker).' },
+      Gujarati: { r: 'Hu tene aa aapva maangu chhu.', n: 'હું તેને આ આપવા માગું છું.', note: '"Maangu chhu" = I want. The verb becomes "aapva".' },
+    },
+  },
+  {
+    id: 'c10',
+    english: 'Is the apple red?',
+    source: 'extra',
+    teaches: 'How to ask a yes/no question',
+    tr: {
+      Dutch: { r: 'Is de appel rood?', note: 'Move the verb to the front.' },
+      Spanish: { r: '¿Es roja la manzana?', note: 'Question marks at both ends; word order is flexible.' },
+      Hindi: { r: 'Kya seb laal hai?', n: 'क्या सेब लाल है?', note: 'Just add "kya" at the start.' },
+      Sindhi: { r: 'Chha soofu gaaṛho aahe?', n: 'ڇا صوف ڳاڙهو آهي؟', d: 'छा सूफ़ु ॻाढ़ो आहे?', note: 'Add "chha" at the start.' },
+      Gujarati: { r: 'Shu safarjan laal chhe?', n: 'શું સફરજન લાલ છે?', note: 'Add "shu" at the start.' },
+    },
+  },
+  {
+    id: 'c11',
+    english: 'The apples are red.',
+    source: 'extra',
+    teaches: 'Plurals',
+    tr: {
+      Dutch: { r: 'De appels zijn rood.', note: 'Plural adds -s here (often -en). "Is" becomes "zijn".' },
+      Spanish: { r: 'Las manzanas son rojas.', note: 'Everything goes plural: las, manzanas, son, rojas.' },
+      Hindi: { r: 'Seb laal hain.', n: 'सेब लाल हैं।', note: '"Seb" stays the same. Only "hai" becomes "hain".' },
+      Sindhi: { r: 'Soofa gaaṛha aahin.', n: 'صوف ڳاڙها آهن.', d: 'सूफ़ ॻाढ़ा आहिनि.', note: 'Noun, adjective and verb all change for the plural.' },
+      Gujarati: { r: 'Safarjano laal chhe.', n: 'સફરજનો લાલ છે.', note: '"-o" makes the plural. "Chhe" stays the same.' },
+    },
+  },
+  {
+    id: 'c12',
+    english: "I'm going to know tomorrow.",
+    source: 'extra',
+    teaches: 'The future',
+    tr: {
+      Dutch: { r: 'Ik ga het morgen weten.', note: '"Gaan" + verb at the end, like "going to".' },
+      Spanish: { r: 'Voy a saberlo mañana.', note: '"Voy a" + verb = going to. Easy future.' },
+      Hindi: { r: 'Mujhe kal pata chalega.', n: 'मुझे कल पता चलेगा।', note: '"Kal" means both yesterday and tomorrow; the verb tense tells you which.' },
+      Sindhi: { r: 'Mookhe subhaaṇe khabar pavandi.', n: 'مون کي سڀاڻي خبر پوندي.', d: 'मूंखे सुभाणे ख़बर पवंदी.', note: '"Subhaaṇe" = tomorrow. "-andi" marks the future.' },
+      Gujarati: { r: 'Mane kaale khabar padshe.', n: 'મને કાલે ખબર પડશે.', note: '"Kaale" is both yesterday and tomorrow. "-she" marks the future.' },
+    },
+  },
+  {
+    id: 'c13',
+    english: 'I have eaten the apple.',
+    source: 'extra',
+    teaches: 'The past',
+    tr: {
+      Dutch: { r: 'Ik heb de appel gegeten.', note: '"Hebben" + the past form (ge-…-en) at the end.' },
+      Spanish: { r: 'He comido la manzana.', note: '"He" = I have, + the -ido form.' },
+      Hindi: { r: 'Maine seb kha liya hai.', n: 'मैंने सेब खा लिया है।', note: 'In the past, "main" becomes "maine".' },
+      Sindhi: { r: 'Moon soofu khaadho aahe.', n: 'مون صوف کاڌو آهي.', d: 'मूं सूफ़ु खाधो आहे.', note: '"Maan" becomes "moon" in the past, like Hindi "maine".' },
+      Gujarati: { r: 'Me safarjan khaadhu chhe.', n: 'મેં સફરજન ખાધું છે.', note: '"Hu" becomes "me" in the past.' },
+    },
+  },
+];

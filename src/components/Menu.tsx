@@ -2,37 +2,31 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { BookOpen, Sparkles, Globe2, Loader2, MessageSquare, Languages, ArrowRight, Mic, MicOff, Settings } from 'lucide-react';
 import { WordData } from '../types';
-import { generatePhrasePractice, isBusy } from '../services/gemini';
-import { initialWords } from '../data/words';
+import { generatePhrasePractice, aiErrorMessage } from '../services/gemini';
 import { PWAInstallButton } from './PWAInstallButton';
 
 import { LiveVoiceCoach } from './LiveVoiceCoach';
 import { SettingsModal } from './SettingsModal';
 import { useApiKey } from '../lib/apiKey';
 
-export type PlayMode = 'quiz' | 'sentences';
-
 interface MenuProps {
-  onStart: (mode: PlayMode, words: WordData[]) => void;
+  onStart: (words: WordData[]) => void;
+  onLearn: () => void;
+  userLanguages: string[];
+  setUserLanguages: (langs: string[]) => void;
 }
 
-export default function Menu({ onStart }: MenuProps) {
-  const [mode, setMode] = useState<PlayMode>('quiz');
+export default function Menu({ onStart, onLearn, userLanguages, setUserLanguages }: MenuProps) {
   const [phrase, setPhrase] = useState('');
-  const [userLanguages, setUserLanguages] = useState<string[]>(() => {
-    const saved = localStorage.getItem('polyglot_user_languages');
-    return saved ? JSON.parse(saved) : ['Dutch', 'Spanish', 'Hindi', 'Sindhi', 'Gujarati'];
-  });
   const [selectedLanguages, setSelectedLanguages] = useState<string[]>(userLanguages);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [pendingAction, setPendingAction] = useState<'basic' | 'custom' | null>(null);
+  const [pendingAction, setPendingAction] = useState<'custom' | null>(null);
   const apiKey = useApiKey();
   
   useEffect(() => {
-    localStorage.setItem('polyglot_user_languages', JSON.stringify(userLanguages));
     setSelectedLanguages(prev => prev.filter(l => userLanguages.includes(l)));
   }, [userLanguages]);
 
@@ -73,34 +67,17 @@ export default function Menu({ onStart }: MenuProps) {
       return;
     }
     
-    if (pendingAction === 'basic') {
-      const shuffled = [...initialWords].sort(() => 0.5 - Math.random());
-      
-      const filteredWords = shuffled.slice(0, 10).map(word => {
-        const filteredTranslations: Record<string, any> = {};
-        selectedLanguages.forEach(lang => {
-          if (word.translations[lang]) {
-            filteredTranslations[lang] = word.translations[lang];
-          }
-        });
-        return { ...word, translations: filteredTranslations };
-      }).filter(word => Object.keys(word.translations).length > 0);
-      
-      setPendingAction(null);
-      onStart(mode, filteredWords);
-    } else if (pendingAction === 'custom') {
+    if (pendingAction === 'custom') {
       setPendingAction(null);
       setIsGenerating(true);
       setError('');
       
       try {
         const newWords = await generatePhrasePractice(phrase, selectedLanguages.join(', '));
-        onStart('sentences', newWords);
+        onStart(newWords);
       } catch (err) {
         console.error(err);
-        setError(isBusy(err)
-          ? 'Gemini is very busy right now. Please try again in a minute.'
-          : 'Failed to generate translations. Please try again.');
+        setError(aiErrorMessage(err, 'Failed to generate translations. Please try again.'));
       } finally {
         setIsGenerating(false);
       }
@@ -150,40 +127,16 @@ export default function Menu({ onStart }: MenuProps) {
                 <BookOpen className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-bold text-indigo-900">Most Common</h3>
-                <p className="text-xs text-indigo-600/70">Start with the essential vocabulary</p>
+                <h3 className="font-bold text-indigo-900">Learn</h3>
+                <p className="text-xs text-indigo-600/70">Core sentences (Tim Ferriss method), then the most common words. Your progress is saved.</p>
               </div>
             </div>
-            <div className="flex flex-col gap-3 mt-3 flex-1 justify-end relative z-10">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setMode('quiz')}
-                  className={`flex-1 py-2.5 rounded-xl border font-medium text-sm transition-colors ${
-                    mode === 'quiz' 
-                      ? 'bg-white border-indigo-400 text-indigo-700 shadow-sm' 
-                      : 'bg-indigo-100/50 border-transparent text-indigo-600 hover:bg-white hover:border-indigo-200'
-                  }`}
-                >
-                  Words
-                </button>
-                <button
-                  onClick={() => setMode('sentences')}
-                  className={`flex-1 py-2.5 rounded-xl border font-medium text-sm transition-colors ${
-                    mode === 'sentences' 
-                      ? 'bg-white border-indigo-400 text-indigo-700 shadow-sm' 
-                      : 'bg-indigo-100/50 border-transparent text-indigo-600 hover:bg-white hover:border-indigo-200'
-                  }`}
-                >
-                  Sentences
-                </button>
-              </div>
-              <button
-                onClick={() => setPendingAction('basic')}
-                className="w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3.5 px-2 rounded-xl font-medium hover:bg-indigo-700 transition-colors text-sm"
-              >
-                {mode === 'quiz' ? 'Begin Quiz' : 'Begin Study'}
-              </button>
-            </div>
+            <button
+              onClick={onLearn}
+              className="mt-4 w-full flex items-center justify-center gap-2 bg-indigo-600 text-white py-3.5 px-2 rounded-xl font-medium hover:bg-indigo-700 transition-colors text-sm relative z-10"
+            >
+              Start learning <ArrowRight className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="flex flex-col bg-teal-50 p-5 rounded-2xl border border-teal-100 shadow-sm relative overflow-hidden">
