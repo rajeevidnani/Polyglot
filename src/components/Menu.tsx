@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { BookOpen, Sparkles, Globe2, Loader2, MessageSquare, Languages, ArrowRight, Mic, MicOff, Settings } from 'lucide-react';
 import { WordData } from '../types';
-import { generatePhrasePractice } from '../services/gemini';
+import { generatePhrasePractice, isBusy } from '../services/gemini';
 import { initialWords } from '../data/words';
 import { PWAInstallButton } from './PWAInstallButton';
 
@@ -98,7 +98,9 @@ export default function Menu({ onStart }: MenuProps) {
         onStart('sentences', newWords);
       } catch (err) {
         console.error(err);
-        setError('Failed to generate translations. Please try again.');
+        setError(isBusy(err)
+          ? 'Gemini is very busy right now. Please try again in a minute.'
+          : 'Failed to generate translations. Please try again.');
       } finally {
         setIsGenerating(false);
       }

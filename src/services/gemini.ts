@@ -11,16 +11,39 @@ function client(key = getApiKey()): GoogleGenAI {
   return new GoogleGenAI({ apiKey: key });
 }
 
+// Checks the key without generating anything, so a busy model can't make a good key look bad.
 export async function testApiKey(key: string): Promise<void> {
-  await client(key).models.generateContent({
-    model: MODELS.text,
-    contents: "Reply with the single word: ok",
-  });
+  await client(key).models.get({ model: MODELS.text });
+}
+
+export function isBusy(err: any): boolean {
+  const status = err?.status ?? err?.code;
+  return status === 503 || status === 429 || /high demand|overloaded|UNAVAILABLE|RESOURCE_EXHAUSTED/i.test(String(err?.message));
+}
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Retries briefly when Gemini is busy, then moves to the next model in the list.
+async function withBusyRetry<T>(models: string[], call: (model: string) => Promise<T>): Promise<T> {
+  let lastErr: unknown;
+  for (const model of models) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        return await call(model);
+      } catch (err) {
+        lastErr = err;
+        if (!isBusy(err)) throw err;
+        await sleep(1000 * (attempt + 1));
+      }
+    }
+  }
+  throw lastErr;
 }
 
 export async function generatePhrasePractice(phrase: string, targetLanguages: string): Promise<WordData[]> {
-  const response = await client().models.generateContent({
-    model: MODELS.text,
+  const ai = client();
+  const response = await withBusyRetry([MODELS.text, MODELS.textFallback], model => ai.models.generateContent({
+    model,
     contents: `The user wants to practice a specific conversational phrase or flow in multiple languages.
     User phrase: "${phrase}".
     Target Languages: ${targetLanguages}
@@ -67,7 +90,7 @@ export async function generatePhrasePractice(phrase: string, targetLanguages: st
         },
       },
     },
-  });
+  }));
 
   const text = response.text;
   if (!text) throw new Error("No response from Gemini");
@@ -92,8 +115,9 @@ export async function generatePhrasePractice(phrase: string, targetLanguages: st
 }
 
 export async function generateSpeech(text: string, lang: string): Promise<string> {
-  const response = await client().models.generateContent({
-    model: MODELS.speech,
+  const ai = client();
+  const response = await withBusyRetry([MODELS.speech], model => ai.models.generateContent({
+    model,
     contents: `Say in ${lang}: ${text}`,
     config: {
       responseModalities: [Modality.AUDIO],
@@ -101,7 +125,7 @@ export async function generateSpeech(text: string, lang: string): Promise<string
         voiceConfig: { prebuiltVoiceConfig: { voiceName: VOICES.speech } },
       },
     },
-  });
+  }));
 
   const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
   if (!base64Audio) throw new Error("Failed to generate audio");
