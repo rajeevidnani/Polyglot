@@ -11,6 +11,19 @@ interface SettingsModalProps {
   onClose: () => void;
 }
 
+// Show Google's own reason so a failing key can actually be diagnosed.
+function describeKeyError(err: any): string {
+  const raw = String(err?.message ?? err ?? '');
+  let reason = raw;
+  try {
+    const parsed = JSON.parse(raw.slice(raw.indexOf('{')));
+    reason = parsed?.error?.message ?? raw;
+  } catch {
+    // Not JSON: keep the raw message.
+  }
+  return `That key didn't work. Google said: ${reason.slice(0, 300)}`;
+}
+
 export function SettingsModal({ userLanguages, setUserLanguages, onClose }: SettingsModalProps) {
   const [newLang, setNewLang] = useState('');
   const savedKey = useApiKey();
@@ -31,7 +44,7 @@ export function SettingsModal({ userLanguages, setUserLanguages, onClose }: Sett
     } catch (err: any) {
       console.error(err);
       setKeyStatus('error');
-      setKeyError("That key didn't work. Check it was copied fully and try again.");
+      setKeyError(describeKeyError(err));
     }
   };
 
