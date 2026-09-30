@@ -45,7 +45,7 @@ export default function LearnHome({ userLanguages, onHome }: LearnHomeProps) {
   };
 
   if (view === 'sentences') return <CoreSentences lang={lang} onBack={() => setView('home')} />;
-  if (view === 'words') return <WordPractice lang={lang} onBack={() => setView('home')} />;
+  if (view === 'words') return <WordPractice languages={languages} onBack={() => setView('home')} />;
 
   const sentences = summarize(lang, 'sentence', sentenceIds);
   const words = summarize(lang, 'word', wordIds);
@@ -84,7 +84,7 @@ export default function LearnHome({ userLanguages, onHome }: LearnHomeProps) {
           step={2}
           icon={<ListChecks className="w-5 h-5" />}
           title="Most common words"
-          subtitle="The most useful words first, 10 at a time"
+          subtitle={`The most useful words first, in all your languages at once (${lang} shown below)`}
           learned={words.learned}
           total={wordIds.length}
           due={words.due}

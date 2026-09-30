@@ -104,6 +104,20 @@ export function buildSession(lang: string, kind: ItemKind, orderedIds: string[],
   return [...due, ...fresh].slice(0, size);
 }
 
+// Same idea across several languages at once: a word is due if it's due in any of them.
+export function buildMultiSession(langs: string[], kind: ItemKind, orderedIds: string[], size: number): string[] {
+  const now = Date.now();
+  const weakest = (id: string) => Math.min(...langs.map(l => state.items[keyOf(l, kind, id)]?.box ?? 0));
+  const due = orderedIds
+    .filter(id => langs.some(l => {
+      const p = state.items[keyOf(l, kind, id)];
+      return p && p.due <= now;
+    }))
+    .sort((a, b) => weakest(a) - weakest(b));
+  const fresh = orderedIds.filter(id => !due.includes(id) && langs.some(l => !state.items[keyOf(l, kind, id)]));
+  return [...due, ...fresh].slice(0, size);
+}
+
 export function practisedDays(lang: string): string[] {
   return state.days[lang] ?? [];
 }

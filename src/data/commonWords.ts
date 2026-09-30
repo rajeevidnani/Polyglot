@@ -205,4 +205,7 @@ export const commonWords: CommonWord[] = [
   w('Numbers', 'eight', 'acht', 'ocho', ['aath', 'आठ'], ['aṭh', 'اٺ', 'अठ'], ['aath', 'આઠ']),
   w('Numbers', 'nine', 'negen', 'nueve', ['nau', 'नौ'], ['nava', 'نوَ', 'नव'], ['nav', 'નવ']),
   w('Numbers', 'ten', 'tien', 'diez', ['das', 'दस'], ['ḍaha', 'ڏهه', 'ॾह'], ['das', 'દસ']),
+
+  // Added later: appended so earlier word ids (and saved progress) stay stable.
+  w('Food & home', 'apple', 'appel', 'manzana', ['seb', 'सेब'], ['soofu', 'صوف', 'सूफ़ु'], ['safarjan', 'સફરજન']),
 ];
